@@ -771,8 +771,10 @@ pub fn walk_inline_asm<'a, V: Visitor<'a>>(visitor: &mut V, asm: &'a InlineAsm) 
         match op {
             InlineAsmOperand::In { expr, .. }
             | InlineAsmOperand::Out { expr: Some(expr), .. }
+            | InlineAsmOperand::Condition { expr: Some(expr), .. }
             | InlineAsmOperand::InOut { expr, .. } => visitor.visit_expr(expr),
-            InlineAsmOperand::Out { expr: None, .. } => {}
+            InlineAsmOperand::Condition { expr: None, .. }
+            | InlineAsmOperand::Out { expr: None, .. } => {}
             InlineAsmOperand::SplitInOut { in_expr, out_expr, .. } => {
                 visitor.visit_expr(in_expr);
                 if let Some(out_expr) = out_expr {

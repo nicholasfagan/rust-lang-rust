@@ -1233,8 +1233,10 @@ impl<'a: 'ast, 'ast, 'tcx> Visitor<'ast> for LateResolutionVisitor<'a, '_, 'ast,
             match op {
                 InlineAsmOperand::In { expr, .. }
                 | InlineAsmOperand::Out { expr: Some(expr), .. }
+                | InlineAsmOperand::Condition { expr: Some(expr), .. }
                 | InlineAsmOperand::InOut { expr, .. } => self.visit_expr(expr),
-                InlineAsmOperand::Out { expr: None, .. } => {}
+                InlineAsmOperand::Condition { expr: None, .. }
+                | InlineAsmOperand::Out { expr: None, .. } => {}
                 InlineAsmOperand::SplitInOut { in_expr, out_expr, .. } => {
                     self.visit_expr(in_expr);
                     if let Some(out_expr) = out_expr {

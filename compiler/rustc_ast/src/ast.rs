@@ -2186,6 +2186,40 @@ pub enum InlineAsmRegOrRegClass {
     RegClass(Symbol),
 }
 
+/// Inline assembly operand explicit flagout flag.
+///
+/// E.g., "c" in `asm!("add {a}, {b}", a = inout(reg) a, b = in(reg) b, c = flagout(carry))`.
+///
+/// These match up with the conditions in the `llvm` and `gcc` backends,
+/// which for x86 accept the following:
+/// * `"a"`: Above, or unsigned greater than
+/// * `"ae"`: Above or equal, or unsigned greater than or equal
+/// * `"b"`: Below, or unsigned less than
+/// * `"be"`: Below or equal, or unsigned less than or equal
+/// * `"c"`: Carry flag set
+/// * `"e"`/`"z"`: Equal, or zero flag set
+/// * `"g"`: signed greater than
+/// * `"ge"`: signed greater than or equal
+/// * `"l"`: signed less than
+/// * `"le"`: signed less than or equal
+/// * `"o"`: overflow flag set
+/// * `"p"`: parity flag set
+/// * `"s"`: sign flag set
+/// * And all of the above with a leading `"n"` to negate them.
+///
+/// Most often, targets have a single flag register,
+/// and the operand is an implicit operand on conditional instructions.
+/// For this reason, the flag must always be an output,
+/// and the placeholder name of that output cannot be referenced in the asm template,
+/// and it cannot be used as an input.
+/// The backend will instead use the appropriate conditional instruction
+/// for upcoming branches, conditional moves, or directly extract the condition
+/// using `setcc` instruction or equivalent.
+#[derive(Clone, Copy, Encodable, Decodable, Debug)]
+pub struct InlineAsmCondition {
+    pub name: Symbol,
+}
+
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Encodable, Decodable, HashStable_Generic)]
 pub struct InlineAsmOptions(u16);
 bitflags::bitflags! {
@@ -2294,6 +2328,10 @@ pub enum InlineAsmOperand {
     Sym {
         sym: InlineAsmSym,
     },
+    Condition {
+        cond: InlineAsmCondition,
+        expr: Option<P<Expr>>,
+    },
 }
 
 impl InlineAsmOperand {
@@ -2303,7 +2341,7 @@ impl InlineAsmOperand {
             | Self::Out { reg, .. }
             | Self::InOut { reg, .. }
             | Self::SplitInOut { reg, .. } => Some(reg),
-            Self::Const { .. } | Self::Sym { .. } => None,
+            Self::Const { .. } | Self::Sym { .. } | Self::Condition { .. } => None,
         }
     }
 }

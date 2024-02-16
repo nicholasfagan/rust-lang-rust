@@ -169,7 +169,8 @@ impl<'cx, 'tcx> Visitor<'tcx> for LoanInvalidationsGenerator<'cx, 'tcx> {
                         InlineAsmOperand::In { reg: _, value } => {
                             self.consume_operand(location, value);
                         }
-                        InlineAsmOperand::Out { reg: _, late: _, place, .. } => {
+                        InlineAsmOperand::Condition { cond: _, place, .. }
+                        | InlineAsmOperand::Out { reg: _, late: _, place, .. } => {
                             if let &Some(place) = place {
                                 self.mutate_place(location, place, Shallow(None));
                             }

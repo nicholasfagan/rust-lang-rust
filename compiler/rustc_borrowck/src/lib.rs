@@ -731,7 +731,8 @@ impl<'cx, 'tcx, R> rustc_mir_dataflow::ResultsVisitor<'cx, 'tcx, R> for MirBorro
                         InlineAsmOperand::In { reg: _, value } => {
                             self.consume_operand(loc, (value, span), flow_state);
                         }
-                        InlineAsmOperand::Out { reg: _, late: _, place, .. } => {
+                        InlineAsmOperand::Condition { cond: _, place, .. }
+                        | InlineAsmOperand::Out { reg: _, late: _, place, .. } => {
                             if let Some(place) = place {
                                 self.mutate_place(loc, (*place, span), Shallow(None), flow_state);
                             }

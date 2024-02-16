@@ -153,6 +153,11 @@ impl<'a, 'gcc, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'gcc, 'tcx> {
         // 1. Normal variables (and saving operands to buffers).
         for (rust_idx, op) in rust_operands.iter().enumerate() {
             match *op {
+                InlineAsmOperandRef::Condition { .. } => {
+                    // FIXME(inline-asm-condition): implement
+                    todo!()
+                },
+
                 InlineAsmOperandRef::Out { reg, late, place } => {
                     use ConstraintOrRegister::*;
 
@@ -275,6 +280,10 @@ impl<'a, 'gcc, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'gcc, 'tcx> {
         // 2. Register variables.
         for (rust_idx, op) in rust_operands.iter().enumerate() {
             match *op {
+                InlineAsmOperandRef::Condition { .. } => {
+                    // FIXME(inline-asm-condition): implement
+                    todo!()
+                },
                 // `out("explicit register") var`
                 InlineAsmOperandRef::Out { reg, late, place } => {
                     if let ConstraintOrRegister::Register(reg_name) = reg_to_gcc(reg) {
@@ -408,6 +417,9 @@ impl<'a, 'gcc, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'gcc, 'tcx> {
                     };
 
                     match rust_operands[operand_idx] {
+                        InlineAsmOperandRef::Condition { .. } => {
+                            bug!("condition in template string");
+                        },
                         InlineAsmOperandRef::Out { reg, ..  } => {
                             let modifier = modifier_to_gcc(asm_arch, reg.reg_class(), modifier);
                             let gcc_index = outputs.iter()

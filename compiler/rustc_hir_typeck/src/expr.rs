@@ -3250,11 +3250,13 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
                 hir::InlineAsmOperand::In { expr, .. } => {
                     self.check_expr_asm_operand(expr, true);
                 }
-                hir::InlineAsmOperand::Out { expr: Some(expr), .. }
+                hir::InlineAsmOperand::Condition { expr: Some(expr), .. }
+                | hir::InlineAsmOperand::Out { expr: Some(expr), .. }
                 | hir::InlineAsmOperand::InOut { expr, .. } => {
                     self.check_expr_asm_operand(expr, false);
                 }
-                hir::InlineAsmOperand::Out { expr: None, .. } => {}
+                hir::InlineAsmOperand::Condition { expr: None, .. }
+                | hir::InlineAsmOperand::Out { expr: None, .. } => {}
                 hir::InlineAsmOperand::SplitInOut { in_expr, out_expr, .. } => {
                     self.check_expr_asm_operand(in_expr, true);
                     if let Some(out_expr) = out_expr {

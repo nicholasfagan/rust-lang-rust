@@ -830,6 +830,13 @@ impl<'tcx> TerminatorKind<'tcx> {
                         InlineAsmOperand::SymStatic { def_id } => {
                             write!(fmt, "sym_static {def_id:?}")?;
                         }
+                        InlineAsmOperand::Condition { cond, place } => {
+                            if let Some(place) = place {
+                                write!(fmt, "flagout({cond:?}) {place:?}")?;
+                            } else {
+                                write!(fmt, "flagout({cond:?}) _")?;
+                            }
+                        }
                     }
                 }
                 write!(fmt, ", options({options:?}))")

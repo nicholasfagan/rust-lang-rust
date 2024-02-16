@@ -656,6 +656,12 @@ impl<'tcx> Cx<'tcx> {
                         hir::InlineAsmOperand::SymStatic { path: _, def_id } => {
                             InlineAsmOperand::SymStatic { def_id }
                         }
+                        hir::InlineAsmOperand::Condition { cond, ref expr } => {
+                            InlineAsmOperand::Condition {
+                                cond,
+                                expr: expr.map(|expr| self.mirror_expr(expr)),
+                            }
+                        }
                     })
                     .collect(),
                 options: asm.options,

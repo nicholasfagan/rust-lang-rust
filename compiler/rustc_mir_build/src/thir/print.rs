@@ -889,6 +889,19 @@ impl<'a, 'tcx> ThirPrinter<'a, 'tcx> {
                 print_indented!(self, format!("def_id: {:?}", def_id), depth_lvl + 1);
                 print_indented!(self, "}", depth_lvl + 1);
             }
+            InlineAsmOperand::Condition { cond, expr } => {
+                print_indented!(self, "InlineAsmOperand::Condition {", depth_lvl);
+                print_indented!(self, format!("cond: {:?}", cond), depth_lvl + 1);
+
+                if let Some(expr) = expr {
+                    print_indented!(self, "place: Some( ", depth_lvl + 1);
+                    self.print_expr(*expr, depth_lvl + 2);
+                    print_indented!(self, ")", depth_lvl + 1);
+                } else {
+                    print_indented!(self, "place: None", depth_lvl + 1);
+                }
+                print_indented!(self, "}", depth_lvl + 1);
+            }
         }
     }
 }

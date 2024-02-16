@@ -262,7 +262,8 @@ impl<'tcx> crate::GenKillAnalysis<'tcx> for MaybeRequiresStorage<'_, 'tcx> {
             TerminatorKind::InlineAsm { operands, .. } => {
                 for op in operands {
                     match op {
-                        InlineAsmOperand::Out { place, .. }
+                        InlineAsmOperand::Condition { place, .. }
+                        | InlineAsmOperand::Out { place, .. }
                         | InlineAsmOperand::InOut { out_place: place, .. } => {
                             if let Some(place) = place {
                                 trans.gen(place.local);

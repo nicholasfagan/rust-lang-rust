@@ -279,7 +279,8 @@ impl<'a, 'tcx> ExprUseVisitor<'a, 'tcx> {
                 for (op, _op_sp) in asm.operands {
                     match op {
                         hir::InlineAsmOperand::In { expr, .. } => self.consume_expr(expr),
-                        hir::InlineAsmOperand::Out { expr: Some(expr), .. }
+                        hir::InlineAsmOperand::Condition { expr: Some(expr), .. }
+                        | hir::InlineAsmOperand::Out { expr: Some(expr), .. }
                         | hir::InlineAsmOperand::InOut { expr, .. } => {
                             self.mutate_expr(expr);
                         }
@@ -289,7 +290,8 @@ impl<'a, 'tcx> ExprUseVisitor<'a, 'tcx> {
                                 self.mutate_expr(out_expr);
                             }
                         }
-                        hir::InlineAsmOperand::Out { expr: None, .. }
+                        hir::InlineAsmOperand::Condition { expr: None, .. }
+                        | hir::InlineAsmOperand::Out { expr: None, .. }
                         | hir::InlineAsmOperand::Const { .. }
                         | hir::InlineAsmOperand::SymFn { .. }
                         | hir::InlineAsmOperand::SymStatic { .. } => {}

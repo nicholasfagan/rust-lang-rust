@@ -1265,6 +1265,17 @@ impl<'a> State<'a> {
                     s.space();
                     s.print_qpath(path, true);
                 }
+                hir::InlineAsmOperand::Condition { cond, ref expr } => {
+                    s.word("flagout");
+                    s.popen();
+                    s.word(format!("{cond}"));
+                    s.pclose();
+                    s.space();
+                    match expr {
+                        Some(expr) => s.print_expr(expr),
+                        None => s.word("_"),
+                    }
+                }
             },
             AsmArg::Options(opts) => {
                 s.word("options");

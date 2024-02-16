@@ -500,7 +500,8 @@ impl<'b, 'a, 'tcx, F: Fn(Ty<'tcx>) -> bool> Gatherer<'b, 'a, 'tcx, F> {
                          => {
                             self.gather_operand(value);
                         }
-                        InlineAsmOperand::Out { reg: _, late: _, place, .. } => {
+                        InlineAsmOperand::Condition { cond: _, place }
+                        | InlineAsmOperand::Out { reg: _, late: _, place, .. } => {
                             if let Some(place) = place {
                                 self.create_move_path(place);
                                 self.gather_init(place.as_ref(), InitKind::Deep);

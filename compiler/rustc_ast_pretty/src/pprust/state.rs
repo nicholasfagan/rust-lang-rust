@@ -1331,6 +1331,17 @@ impl<'a> State<'a> {
                             s.print_path(&sym.path, true, 0);
                         }
                     }
+                    InlineAsmOperand::Condition { cond, expr } => {
+                        s.word("flagout");
+                        s.popen();
+                        s.print_symbol(cond.name, ast::StrStyle::Cooked);
+                        s.pclose();
+                        s.space();
+                        match expr {
+                            Some(expr) => s.print_expr(expr, FixupContext::default()),
+                            None => s.word("_"),
+                        }
+                    }
                 }
             }
             AsmArg::ClobberAbi(abi) => {

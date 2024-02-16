@@ -5,7 +5,7 @@ use rustc_ast::{InlineAsmOptions, InlineAsmTemplatePiece};
 use rustc_hir::def_id::DefId;
 use rustc_middle::ty::Instance;
 use rustc_span::Span;
-use rustc_target::asm::InlineAsmRegOrRegClass;
+use rustc_target::asm::{InlineAsmCondition, InlineAsmRegOrRegClass};
 
 #[derive(Debug)]
 pub enum InlineAsmOperandRef<'tcx, B: BackendTypes + ?Sized> {
@@ -32,6 +32,10 @@ pub enum InlineAsmOperandRef<'tcx, B: BackendTypes + ?Sized> {
     },
     SymStatic {
         def_id: DefId,
+    },
+    Condition {
+        cond: InlineAsmCondition,
+        place: Option<PlaceRef<'tcx, B::Value>>,
     },
 }
 

@@ -76,6 +76,7 @@ pub(crate) fn codegen_global_asm_item(tcx: TyCtxt<'_>, global_asm: &mut String, 
                             global_asm.push_str(symbol.name);
                         }
                         InlineAsmOperand::In { .. }
+                        | InlineAsmOperand::Condition { .. }
                         | InlineAsmOperand::Out { .. }
                         | InlineAsmOperand::InOut { .. }
                         | InlineAsmOperand::SplitInOut { .. } => {

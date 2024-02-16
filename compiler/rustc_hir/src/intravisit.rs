@@ -1196,7 +1196,7 @@ pub fn walk_inline_asm<'v, V: Visitor<'v>>(visitor: &mut V, asm: &'v InlineAsm<'
             InlineAsmOperand::In { expr, .. } | InlineAsmOperand::InOut { expr, .. } => {
                 visitor.visit_expr(expr)
             }
-            InlineAsmOperand::Out { expr, .. } => {
+            InlineAsmOperand::Condition { expr, .. } | InlineAsmOperand::Out { expr, .. } => {
                 if let Some(expr) = expr {
                     visitor.visit_expr(expr);
                 }

@@ -470,6 +470,22 @@ impl<'a, 'tcx> InlineAsmCtxt<'a, 'tcx> {
                         }
                     };
                 }
+                hir::InlineAsmOperand::Condition { cond: _, expr } => {
+                    if let Some(expr) = expr {
+                        // verify the type of expr is a `bool`
+                        let ty = (self.get_operand_ty)(expr);
+                        if !matches!(ty.kind(), ty::Bool) {
+                            self.tcx
+                                .dcx()
+                                .struct_span_err(expr.span, "invalid `flagout` operand")
+                                .with_span_label(
+                                    expr.span,
+                                    format!("expected `bool`, found `{}`", ty),
+                                )
+                                .emit();
+                        }
+                    }
+                }
             }
         }
     }

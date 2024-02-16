@@ -23,6 +23,7 @@ pub struct AsmArgs {
     pub operands: Vec<(ast::InlineAsmOperand, Span)>,
     named_args: FxIndexMap<Symbol, usize>,
     reg_args: GrowableBitSet<usize>,
+    cond_args: GrowableBitSet<usize>,
     pub clobber_abis: Vec<(Symbol, Span)>,
     options: ast::InlineAsmOptions,
     pub options_spans: Vec<Span>,
@@ -59,6 +60,7 @@ pub fn parse_asm_args<'a>(
         operands: vec![],
         named_args: Default::default(),
         reg_args: Default::default(),
+        cond_args: Default::default(),
         clobber_abis: Vec::new(),
         options: ast::InlineAsmOptions::empty(),
         options_spans: vec![],
@@ -107,6 +109,7 @@ pub fn parse_asm_args<'a>(
         };
 
         let mut explicit_reg = false;
+        let mut is_condition = false;
         let op = if !is_global_asm && p.eat_keyword(kw::In) {
             let reg = parse_reg(p, &mut explicit_reg)?;
             if p.eat_keyword(kw::Underscore) {
@@ -166,6 +169,11 @@ pub fn parse_asm_args<'a>(
                 path: path.clone(),
             };
             ast::InlineAsmOperand::Sym { sym }
+        } else if p.eat_keyword(sym::flagout) {
+            let cond = parse_condition(p)?;
+            is_condition = true;
+            let expr = if p.eat_keyword(kw::Underscore) { None } else { Some(p.parse_expr()?) };
+            ast::InlineAsmOperand::Condition { cond, expr }
         } else if allow_templates {
             let template = p.parse_expr()?;
             // If it can't possibly expand to a string, provide diagnostics here to include other
@@ -199,7 +207,15 @@ pub fn parse_asm_args<'a>(
         // Validate the order of named, positional & explicit register operands and
         // clobber_abi/options. We do this at the end once we have the full span
         // of the argument available.
-        if explicit_reg {
+        if is_condition {
+            // treated the same as explicit register operands,
+            // (i.e. not named or positional)
+            // but with a different error message
+            if name.is_some() {
+                dcx.emit_err(errors::AsmConditionName { span });
+            }
+            args.cond_args.insert(slot);
+        } else if explicit_reg {
             if name.is_some() {
                 dcx.emit_err(errors::AsmExplicitRegisterName { span });
             }
@@ -211,11 +227,24 @@ pub fn parse_asm_args<'a>(
             }
             args.named_args.insert(name, slot);
         } else {
-            if !args.named_args.is_empty() || !args.reg_args.is_empty() {
+            if !args.named_args.is_empty()
+                || !args.reg_args.is_empty()
+                || !args.cond_args.is_empty()
+            {
                 let named = args.named_args.values().map(|p| args.operands[*p].1).collect();
                 let explicit = args.reg_args.iter().map(|p| args.operands[p].1).collect();
+                let flagout = args.cond_args.iter().map(|p| args.operands[p].1).collect();
 
-                dcx.emit_err(errors::AsmPositionalAfter { span, named, explicit });
+                if args.cond_args.is_empty() {
+                    dcx.emit_err(errors::AsmPositionalAfter { span, named, explicit });
+                } else {
+                    dcx.emit_err(errors::AsmPositionalAfterFlagout {
+                        span,
+                        named,
+                        explicit,
+                        flagout,
+                    });
+                }
             }
         }
     }
@@ -242,8 +271,14 @@ pub fn parse_asm_args<'a>(
     let mut have_real_output = false;
     let mut outputs_sp = vec![];
     let mut regclass_outputs = vec![];
+    let mut has_condition = false;
     for (op, op_sp) in &args.operands {
         match op {
+            ast::InlineAsmOperand::Condition { expr, .. } => {
+                outputs_sp.push(*op_sp);
+                have_real_output |= expr.is_some();
+                has_condition = true;
+            }
             ast::InlineAsmOperand::Out { reg, expr, .. }
             | ast::InlineAsmOperand::SplitInOut { reg, out_expr: expr, .. } => {
                 outputs_sp.push(*op_sp);
@@ -261,6 +296,10 @@ pub fn parse_asm_args<'a>(
             }
             _ => {}
         }
+    }
+    if args.options.contains(ast::InlineAsmOptions::PRESERVES_FLAGS) && has_condition {
+        let spans = args.options_spans.clone();
+        dcx.emit_err(errors::AsmPreservesFlagsWithCondition { spans });
     }
     if args.options.contains(ast::InlineAsmOptions::PURE) && !have_real_output {
         dcx.emit_err(errors::AsmPureNoOutput { spans: args.options_spans.clone() });
@@ -432,12 +471,30 @@ fn parse_reg<'a>(
     Ok(result)
 }
 
+fn parse_condition<'a>(p: &mut Parser<'a>) -> PResult<'a, ast::InlineAsmCondition> {
+    p.expect(&token::OpenDelim(Delimiter::Parenthesis))?;
+    let result = match p.token.uninterpolate().kind {
+        token::Literal(token::Lit { kind: token::LitKind::Str, symbol, suffix: _ }) => {
+            ast::InlineAsmCondition { name: symbol }
+        }
+        _ => {
+            return Err(p.dcx().create_err(errors::ExpectedCondition { span: p.token.span }));
+        }
+    };
+    p.bump();
+    p.expect(&token::CloseDelim(Delimiter::Parenthesis))?;
+    Ok(result)
+}
+
 fn expand_preparsed_asm(ecx: &mut ExtCtxt<'_>, args: AsmArgs) -> Option<ast::InlineAsm> {
     let mut template = vec![];
     // Register operands are implicitly used since they are not allowed to be
     // referenced in the template string.
     let mut used = vec![false; args.operands.len()];
     for pos in args.reg_args.iter() {
+        used[pos] = true;
+    }
+    for pos in args.cond_args.iter() {
         used[pos] = true;
     }
     let named_pos: FxHashMap<usize, Symbol> =
@@ -573,6 +630,7 @@ fn expand_preparsed_asm(ecx: &mut ExtCtxt<'_>, args: AsmArgs) -> Option<ast::Inl
                             if idx >= args.operands.len()
                                 || named_pos.contains_key(&idx)
                                 || args.reg_args.contains(idx)
+                                || args.cond_args.contains(idx)
                             {
                                 let msg = format!("invalid reference to argument at index {idx}");
                                 let mut err = ecx.dcx().struct_span_err(span, msg);
@@ -580,7 +638,8 @@ fn expand_preparsed_asm(ecx: &mut ExtCtxt<'_>, args: AsmArgs) -> Option<ast::Inl
 
                                 let positional_args = args.operands.len()
                                     - args.named_args.len()
-                                    - args.reg_args.len();
+                                    - args.reg_args.len()
+                                    - args.cond_args.len();
                                 let positional = if positional_args != args.operands.len() {
                                     "positional "
                                 } else {
@@ -611,6 +670,12 @@ fn expand_preparsed_asm(ecx: &mut ExtCtxt<'_>, args: AsmArgs) -> Option<ast::Inl
                                     err.span_help(
                                         args.operands[idx].1,
                                         "use the register name directly in the assembly code",
+                                    );
+                                } else if args.cond_args.contains(idx) {
+                                    err.span_label(args.operands[idx].1, "flagout argument");
+                                    err.span_note(
+                                        args.operands[idx].1,
+                                        "flagout arguments cannot be used in the asm template",
                                     );
                                 }
                                 err.emit();

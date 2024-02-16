@@ -27,7 +27,7 @@ use rustc_middle::ty::{
 use rustc_span::def_id::LocalDefId;
 use rustc_span::{sym, ErrorGuaranteed, Span, Symbol, DUMMY_SP};
 use rustc_target::abi::{FieldIdx, Integer, Size, VariantIdx};
-use rustc_target::asm::InlineAsmRegOrRegClass;
+use rustc_target::asm::{InlineAsmCondition, InlineAsmRegOrRegClass};
 use std::cmp::Ordering;
 use std::fmt;
 use std::ops::Index;
@@ -564,6 +564,10 @@ pub enum InlineAsmOperand<'tcx> {
     },
     SymStatic {
         def_id: DefId,
+    },
+    Condition {
+        cond: InlineAsmCondition,
+        expr: Option<ExprId>,
     },
 }
 

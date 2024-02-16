@@ -243,7 +243,7 @@ fn never_loop_expr<'tcx>(
             InlineAsmOperand::In { expr, .. } | InlineAsmOperand::InOut { expr, .. } => {
                 never_loop_expr(cx, expr, local_labels, main_loop_id)
             },
-            InlineAsmOperand::Out { expr, .. } => {
+            InlineAsmOperand::Condition { expr, .. } | InlineAsmOperand::Out { expr, .. } => {
                 never_loop_expr_all(cx, expr.iter().copied(), local_labels, main_loop_id)
             },
             InlineAsmOperand::SplitInOut { in_expr, out_expr, .. } => never_loop_expr_all(

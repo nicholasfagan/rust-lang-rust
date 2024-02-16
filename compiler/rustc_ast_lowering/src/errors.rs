@@ -217,6 +217,15 @@ pub struct InvalidRegisterClass<'a> {
     pub error: &'a str,
 }
 
+#[derive(Diagnostic, Clone, Copy)]
+#[diag(ast_lowering_invalid_condition)]
+pub struct InvalidCondition<'a> {
+    #[primary_span]
+    pub op_span: Span,
+    pub cond: Symbol,
+    pub error: &'a str,
+}
+
 #[derive(Diagnostic)]
 #[diag(ast_lowering_invalid_asm_template_modifier_reg_class)]
 pub struct InvalidAsmTemplateModifierRegClass {
@@ -250,6 +259,16 @@ pub struct InvalidAsmTemplateModifierConst {
 #[derive(Diagnostic, Clone, Copy)]
 #[diag(ast_lowering_invalid_asm_template_modifier_sym)]
 pub struct InvalidAsmTemplateModifierSym {
+    #[primary_span]
+    #[label(ast_lowering_template_modifier)]
+    pub placeholder_span: Span,
+    #[label(ast_lowering_argument)]
+    pub op_span: Span,
+}
+
+#[derive(Diagnostic, Clone, Copy)]
+#[diag(ast_lowering_invalid_asm_template_modifier_condition)]
+pub struct InvalidAsmTemplateModifierCondition {
     #[primary_span]
     #[label(ast_lowering_template_modifier)]
     pub placeholder_span: Span,

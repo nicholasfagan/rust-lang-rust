@@ -1120,6 +1120,10 @@ impl<'a, 'tcx, Bx: BuilderMethods<'a, 'tcx>> FunctionCx<'a, 'tcx, Bx> {
                 mir::InlineAsmOperand::SymStatic { def_id } => {
                     InlineAsmOperandRef::SymStatic { def_id }
                 }
+                mir::InlineAsmOperand::Condition { cond, ref place } => {
+                    let place = place.map(|place| self.codegen_place(bx, place.as_ref()));
+                    InlineAsmOperandRef::Condition { cond, place }
+                }
             })
             .collect();
 

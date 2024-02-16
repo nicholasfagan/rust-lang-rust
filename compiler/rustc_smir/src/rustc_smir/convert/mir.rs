@@ -553,7 +553,9 @@ impl<'tcx> Stable<'tcx> for mir::InlineAsmOperand<'tcx> {
 
         let (in_value, out_place) = match self {
             InlineAsmOperand::In { value, .. } => (Some(value.stable(tables)), None),
-            InlineAsmOperand::Out { place, .. } => (None, place.map(|place| place.stable(tables))),
+            InlineAsmOperand::Condition { place, .. } | InlineAsmOperand::Out { place, .. } => {
+                (None, place.map(|place| place.stable(tables)))
+            }
             InlineAsmOperand::InOut { in_value, out_place, .. } => {
                 (Some(in_value.stable(tables)), out_place.map(|place| place.stable(tables)))
             }

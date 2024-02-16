@@ -2,10 +2,10 @@ use crate::{ImplTraitContext, ImplTraitPosition, ParamMode, ResolverAstLoweringE
 
 use super::errors::{
     AbiSpecifiedMultipleTimes, AttSyntaxOnlyX86, ClobberAbiNotSupported,
-    InlineAsmUnsupportedTarget, InvalidAbiClobberAbi, InvalidAsmTemplateModifierConst,
-    InvalidAsmTemplateModifierRegClass, InvalidAsmTemplateModifierRegClassSub,
-    InvalidAsmTemplateModifierSym, InvalidRegister, InvalidRegisterClass, RegisterClassOnlyClobber,
-    RegisterConflict,
+    InlineAsmUnsupportedTarget, InvalidAbiClobberAbi, InvalidAsmTemplateModifierCondition,
+    InvalidAsmTemplateModifierConst, InvalidAsmTemplateModifierRegClass,
+    InvalidAsmTemplateModifierRegClassSub, InvalidAsmTemplateModifierSym, InvalidCondition,
+    InvalidRegister, InvalidRegisterClass, RegisterClassOnlyClobber, RegisterConflict,
 };
 use super::LoweringContext;
 
@@ -236,6 +236,47 @@ impl<'a, 'hir> LoweringContext<'a, 'hir> {
                             }
                         }
                     }
+                    InlineAsmOperand::Condition { cond, expr } => {
+                        //self.dcx().emit_err(InlineAsmUnsupportedTarget { span: sp });
+                        //self.dcx().emit_err(InvalidInlineAsmOperand {Err,Reg(asm::InlineAsmReg::Err),
+                        //vbj c
+                        //op_span: *op_sp,
+                        //msg: "invalid flag operand".to_string(),
+                        //});
+
+                        // The registers are parsed here, during HIR lowering,
+                        // so parse condition codes here too.
+
+                        if !self.tcx.features().asm_flagout {
+                            feature_err(
+                                &sess.parse_sess,
+                                sym::asm_flagout,
+                                *op_sp,
+                                "flagout operands for inline assembly are unstable",
+                            )
+                            .emit();
+                        }
+
+                        let parsed_cond = if let Some(asm_arch) = asm_arch {
+                            asm::InlineAsmCondition::parse(asm_arch, cond.name).unwrap_or_else(
+                                |error| {
+                                    self.dcx().emit_err(InvalidCondition {
+                                        op_span: *op_sp,
+                                        cond: cond.name,
+                                        error,
+                                    });
+                                    asm::InlineAsmCondition::Err
+                                },
+                            )
+                        } else {
+                            asm::InlineAsmCondition::Err
+                        };
+
+                        hir::InlineAsmOperand::Condition {
+                            cond: parsed_cond,
+                            expr: expr.as_ref().map(|expr| self.lower_expr(expr)),
+                        }
+                    }
                 };
                 (op, self.lower_span(*op_sp))
             })
@@ -295,6 +336,12 @@ impl<'a, 'hir> LoweringContext<'a, 'hir> {
                             op_span: op_sp,
                         });
                     }
+                    hir::InlineAsmOperand::Condition { .. } => {
+                        self.dcx().emit_err(InvalidAsmTemplateModifierCondition {
+                            placeholder_span,
+                            op_span: op_sp,
+                        });
+                    }
                 }
             }
         }
@@ -332,7 +379,8 @@ impl<'a, 'hir> LoweringContext<'a, 'hir> {
                         hir::InlineAsmOperand::InOut { .. }
                         | hir::InlineAsmOperand::SplitInOut { .. } => (true, true),
 
-                        hir::InlineAsmOperand::Const { .. }
+                        hir::InlineAsmOperand::Condition { .. }
+                        | hir::InlineAsmOperand::Const { .. }
                         | hir::InlineAsmOperand::SymFn { .. }
                         | hir::InlineAsmOperand::SymStatic { .. } => {
                             unreachable!("{op:?} is not a register operand");

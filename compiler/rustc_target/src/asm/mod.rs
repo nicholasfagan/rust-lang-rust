@@ -197,7 +197,7 @@ pub use riscv::{RiscVInlineAsmReg, RiscVInlineAsmRegClass};
 pub use s390x::{S390xInlineAsmReg, S390xInlineAsmRegClass};
 pub use spirv::{SpirVInlineAsmReg, SpirVInlineAsmRegClass};
 pub use wasm::{WasmInlineAsmReg, WasmInlineAsmRegClass};
-pub use x86::{X86InlineAsmReg, X86InlineAsmRegClass};
+pub use x86::{X86InlineAsmCondition, X86InlineAsmReg, X86InlineAsmRegClass};
 
 #[derive(Copy, Clone, Encodable, Decodable, Debug, Eq, PartialEq, Hash)]
 pub enum InlineAsmArch {
@@ -254,6 +254,98 @@ impl FromStr for InlineAsmArch {
             "csky" => Ok(Self::CSKY),
             _ => Err(()),
         }
+    }
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Hash)]
+#[derive(HashStable_Generic, Encodable, Decodable)]
+pub enum InlineAsmCondition {
+    X86(X86InlineAsmCondition),
+    //Arm(ArmInlineAsmReg),
+    //AArch64(AArch64InlineAsmReg),
+    //RiscV(RiscVInlineAsmReg),
+    ////Nvptx(NvptxInlineAsmReg),
+    ////PowerPC(PowerPCInlineAsmReg),
+    ////Hexagon(HexagonInlineAsmReg),
+    ////LoongArch(LoongArchInlineAsmReg),
+    ////Mips(MipsInlineAsmReg),
+    //S390x(S390xInlineAsmReg),
+    ////SpirV(SpirVInlineAsmReg),
+    ////Wasm(WasmInlineAsmReg),
+    ////Bpf(BpfInlineAsmReg),
+    ////Avr(AvrInlineAsmReg),
+    ////Msp430(Msp430InlineAsmReg),
+    ////M68k(M68kInlineAsmReg),
+    ////CSKY(CSKYInlineAsmReg),
+    // Placeholder for invalid register constraints for the current target
+    Err,
+}
+
+impl InlineAsmCondition {
+    pub fn name(&self) -> &'static str {
+        match *self {
+            InlineAsmCondition::X86(cond) => cond.name(),
+            //InlineAsmCondition::Arm(c) => c.name(),
+            //InlineAsmCondition::AArch64(c) => c.name(),
+            //InlineAsmCondition::RiscV(c) => c.name(),
+            ////InlineAsmCondition::Nvptx(c) => c.name(),
+            ////InlineAsmCondition::PowerPC(c) => c.name(),
+            ////InlineAsmCondition::Hexagon(c) => c.name(),
+            ////InlineAsmCondition::LoongArch(c) => c.name(),
+            ////InlineAsmCondition::Mips(c) => c.name(),
+            //InlineAsmCondition::S390x(c) => c.name(),
+            ////InlineAsmCondition::SpirV(c) => c.name(),
+            ////InlineAsmCondition::Wasm(c) => c.name(),
+            ////InlineAsmCondition::Bpf(c) => c.name(),
+            ////InlineAsmCondition::Avr(c) => c.name(),
+            ////InlineAsmCondition::Msp430(c) => c.name(),
+            ////InlineAsmCondition::M68k(c) => c.name(),
+            ////InlineAsmCondition::CSKY(c) => c.name(),
+            InlineAsmCondition::Err => "<condition>",
+        }
+    }
+    pub fn parse(arch: InlineAsmArch, name: Symbol) -> Result<Self, &'static str> {
+        // FIXME: use direct symbol comparison for register names
+        // Use `Symbol::as_str` instead of `Symbol::with` here because `has_feature` may access `Symbol`.
+        let name = name.as_str();
+        Ok(match arch {
+            InlineAsmArch::X86 | InlineAsmArch::X86_64 => {
+                Self::X86(X86InlineAsmCondition::parse(name)?)
+            }
+            _ => return Err("unsupported architecture"),
+            /*
+            InlineAsmArch::Arm => Self::Arm(ArmInlineAsmCondition::parse(name)?),
+            InlineAsmArch::AArch64 => Self::AArch64(AArch64InlineAsmCondition::parse(name)?),
+            InlineAsmArch::RiscV32 | InlineAsmArch::RiscV64 => {
+                Self::RiscV(RiscVInlineAsmCondition::parse(name)?)
+            }
+            InlineAsmArch::Nvptx64 => Self::Nvptx(NvptxInlineAsmCondition::parse(name)?),
+            InlineAsmArch::PowerPC | InlineAsmArch::PowerPC64 => {
+                Self::PowerPC(PowerPCInlineAsmCondition::parse(name)?)
+            }
+            InlineAsmArch::Hexagon => Self::Hexagon(HexagonInlineAsmCondition::parse(name)?),
+            InlineAsmArch::LoongArch64 => Self::LoongArch(LoongArchInlineAsmCondition::parse(name)?),
+            InlineAsmArch::Mips | InlineAsmArch::Mips64 => {
+                Self::Mips(MipsInlineAsmCondition::parse(name)?)
+            }
+            InlineAsmArch::S390x => Self::S390x(S390xInlineAsmCondition::parse(name)?),
+            InlineAsmArch::SpirV => Self::SpirV(SpirVInlineAsmCondition::parse(name)?),
+            InlineAsmArch::Wasm32 | InlineAsmArch::Wasm64 => {
+                Self::Wasm(WasmInlineAsmCondition::parse(name)?)
+            }
+            InlineAsmArch::Bpf => Self::Bpf(BpfInlineAsmCondition::parse(name)?),
+            InlineAsmArch::Avr => Self::Avr(AvrInlineAsmCondition::parse(name)?),
+            InlineAsmArch::Msp430 => Self::Msp430(Msp430InlineAsmCondition::parse(name)?),
+            InlineAsmArch::M68k => Self::M68k(M68kInlineAsmCondition::parse(name)?),
+            InlineAsmArch::CSKY => Self::CSKY(CSKYInlineAsmCondition::parse(name)?),
+            */
+        })
+    }
+}
+
+impl fmt::Display for InlineAsmCondition {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.name(), f)
     }
 }
 

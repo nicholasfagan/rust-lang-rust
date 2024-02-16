@@ -709,6 +709,13 @@ pub(crate) struct AsmPureNoOutput {
 }
 
 #[derive(Diagnostic)]
+#[diag(builtin_macros_asm_preserves_flags_with_condition)]
+pub(crate) struct AsmPreservesFlagsWithCondition {
+    #[primary_span]
+    pub(crate) spans: Vec<Span>,
+}
+
+#[derive(Diagnostic)]
 #[diag(builtin_macros_asm_modifier_invalid)]
 pub(crate) struct AsmModifierInvalid {
     #[primary_span]
@@ -774,6 +781,20 @@ pub(crate) struct AsmPositionalAfter {
     pub(crate) named: Vec<Span>,
     #[label(builtin_macros_explicit)]
     pub(crate) explicit: Vec<Span>,
+}
+
+#[derive(Diagnostic)]
+#[diag(builtin_macros_asm_pos_after_flagout)]
+pub(crate) struct AsmPositionalAfterFlagout {
+    #[primary_span]
+    #[label(builtin_macros_pos)]
+    pub(crate) span: Span,
+    #[label(builtin_macros_named)]
+    pub(crate) named: Vec<Span>,
+    #[label(builtin_macros_explicit)]
+    pub(crate) explicit: Vec<Span>,
+    #[label(builtin_macros_flagout)]
+    pub(crate) flagout: Vec<Span>,
 }
 
 #[derive(Diagnostic)]
@@ -845,6 +866,20 @@ pub(crate) struct TestRunnerNargs {
 #[derive(Diagnostic)]
 #[diag(builtin_macros_expected_register_class_or_explicit_register)]
 pub(crate) struct ExpectedRegisterClassOrExplicitRegister {
+    #[primary_span]
+    pub(crate) span: Span,
+}
+
+#[derive(Diagnostic)]
+#[diag(builtin_macros_expected_condition)]
+pub(crate) struct ExpectedCondition {
+    #[primary_span]
+    pub(crate) span: Span,
+}
+
+#[derive(Diagnostic)]
+#[diag(builtin_macros_asm_condition_name)]
+pub(crate) struct AsmConditionName {
     #[primary_span]
     pub(crate) span: Span,
 }

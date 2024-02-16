@@ -235,6 +235,7 @@ impl<'tcx> CheckInlineAssembly<'tcx> {
                 | InlineAsmOperand::SymFn { .. }
                 | InlineAsmOperand::SymStatic { .. } => None,
                 InlineAsmOperand::In { .. }
+                | InlineAsmOperand::Condition { .. } // FIXME: `flagout`
                 | InlineAsmOperand::Out { .. }
                 | InlineAsmOperand::InOut { .. }
                 | InlineAsmOperand::SplitInOut { .. } => Some(op_sp),

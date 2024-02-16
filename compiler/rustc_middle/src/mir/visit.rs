@@ -573,7 +573,9 @@ macro_rules! make_mir_visitor {
                                 InlineAsmOperand::In { value, .. } => {
                                     self.visit_operand(value, location);
                                 }
-                                InlineAsmOperand::Out { place: Some(place), .. } => {
+
+                                InlineAsmOperand::Condition { place: Some(place), .. }
+                                | InlineAsmOperand::Out { place: Some(place), .. } => {
                                     self.visit_place(
                                         place,
                                         PlaceContext::MutatingUse(MutatingUseContext::AsmOutput),
@@ -594,7 +596,8 @@ macro_rules! make_mir_visitor {
                                 | InlineAsmOperand::SymFn { value } => {
                                     self.visit_constant(value, location);
                                 }
-                                InlineAsmOperand::Out { place: None, .. }
+                                InlineAsmOperand::Condition { place: None, .. }
+                                | InlineAsmOperand::Out { place: None, .. }
                                 | InlineAsmOperand::SymStatic { def_id: _ } => {}
                             }
                         }

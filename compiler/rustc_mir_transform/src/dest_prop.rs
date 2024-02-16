@@ -633,7 +633,8 @@ impl WriteInfo {
                         InlineAsmOperand::In { value, .. } => {
                             self.add_operand(value);
                         }
-                        InlineAsmOperand::Out { place, .. } => {
+                        InlineAsmOperand::Condition { place, .. }
+                        | InlineAsmOperand::Out { place, .. } => {
                             if let Some(place) = place {
                                 self.add_place(*place);
                             }

@@ -40,6 +40,15 @@ impl<'ll, 'tcx> AsmBuilderMethods<'tcx> for Builder<'_, 'll, 'tcx> {
         let mut clobbered_x87 = false;
         for (idx, op) in operands.iter().enumerate() {
             match *op {
+                InlineAsmOperandRef::Condition { cond, place: _ } => {
+                    // FIXME(inline-asm-condition): implement this
+
+                    // Basically do the same thing as would be done for a lateout of type bool
+                    let ty = self.cx.type_bool();
+                    output_types.push(ty);
+                    op_idx.insert(idx, constraints.len());
+                    constraints.push(format!("={{@cc{}}}", cond));
+                }
                 InlineAsmOperandRef::Out { reg, late, place } => {
                     let is_target_supported = |reg_class: InlineAsmRegClass| {
                         for &(_, feature) in reg_class.supported_types(asm_arch) {
@@ -205,6 +214,9 @@ impl<'ll, 'tcx> AsmBuilderMethods<'tcx> for Builder<'_, 'll, 'tcx> {
                             // Only emit the raw symbol name
                             template_str.push_str(&format!("${{{}:c}}", op_idx[&operand_idx]));
                         }
+                        InlineAsmOperandRef::Condition { .. } => {
+                            bug!("Condition operand in inline assembly template")
+                        }
                     }
                 }
             }
@@ -323,7 +335,15 @@ impl<'ll, 'tcx> AsmBuilderMethods<'tcx> for Builder<'_, 'll, 'tcx> {
 
         // Write results to outputs
         for (idx, op) in operands.iter().enumerate() {
-            if let InlineAsmOperandRef::Out { reg, place: Some(place), .. }
+            if let InlineAsmOperandRef::Condition { place: Some(place), .. } = *op {
+                let value = if output_types.len() == 1 {
+                    result
+                } else {
+                    self.extract_value(result, op_idx[&idx] as u64)
+                };
+                // FIXME(inline-asm-condition) doesn't need fixing up?
+                OperandValue::Immediate(value).store(self, place);
+            } else if let InlineAsmOperandRef::Out { reg, place: Some(place), .. }
             | InlineAsmOperandRef::InOut { reg, out_place: Some(place), .. } = *op
             {
                 let value = if output_types.len() == 1 {

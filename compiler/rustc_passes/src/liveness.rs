@@ -1059,7 +1059,8 @@ impl<'a, 'tcx> Liveness<'a, 'tcx> {
                         | hir::InlineAsmOperand::Const { .. }
                         | hir::InlineAsmOperand::SymFn { .. }
                         | hir::InlineAsmOperand::SymStatic { .. } => {}
-                        hir::InlineAsmOperand::Out { expr, .. } => {
+                        hir::InlineAsmOperand::Condition { expr, .. }
+                        | hir::InlineAsmOperand::Out { expr, .. } => {
                             if let Some(expr) = expr {
                                 succ = self.write_place(expr, succ, ACC_WRITE);
                             }
@@ -1081,7 +1082,8 @@ impl<'a, 'tcx> Liveness<'a, 'tcx> {
                         hir::InlineAsmOperand::In { expr, .. } => {
                             succ = self.propagate_through_expr(expr, succ)
                         }
-                        hir::InlineAsmOperand::Out { expr, .. } => {
+                        hir::InlineAsmOperand::Condition { expr, .. }
+                        | hir::InlineAsmOperand::Out { expr, .. } => {
                             if let Some(expr) = expr {
                                 succ = self.propagate_through_place_components(expr, succ);
                             }

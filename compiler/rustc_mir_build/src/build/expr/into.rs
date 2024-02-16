@@ -455,6 +455,12 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                         thir::InlineAsmOperand::SymStatic { def_id } => {
                             mir::InlineAsmOperand::SymStatic { def_id }
                         }
+                        thir::InlineAsmOperand::Condition { cond, expr } => {
+                            mir::InlineAsmOperand::Condition {
+                                cond,
+                                place: expr.map(|expr| unpack!(block = this.as_place(block, expr))),
+                            }
+                        }
                     })
                     .collect();
 

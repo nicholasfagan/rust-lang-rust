@@ -19,6 +19,7 @@ use rustc_span::source_map::Spanned;
 use rustc_span::symbol::{kw, sym, Ident, Symbol};
 use rustc_span::ErrorGuaranteed;
 use rustc_span::{def_id::LocalDefId, BytePos, Span, DUMMY_SP};
+use rustc_target::asm::InlineAsmCondition;
 use rustc_target::asm::InlineAsmRegOrRegClass;
 use rustc_target::spec::abi::Abi;
 
@@ -2645,6 +2646,10 @@ pub enum InlineAsmOperand<'hir> {
         path: QPath<'hir>,
         def_id: DefId,
     },
+    Condition {
+        cond: InlineAsmCondition,
+        expr: Option<&'hir Expr<'hir>>,
+    },
 }
 
 impl<'hir> InlineAsmOperand<'hir> {
@@ -2654,7 +2659,10 @@ impl<'hir> InlineAsmOperand<'hir> {
             | Self::Out { reg, .. }
             | Self::InOut { reg, .. }
             | Self::SplitInOut { reg, .. } => Some(reg),
-            Self::Const { .. } | Self::SymFn { .. } | Self::SymStatic { .. } => None,
+            Self::Condition { .. }
+            | Self::Const { .. }
+            | Self::SymFn { .. }
+            | Self::SymStatic { .. } => None,
         }
     }
 

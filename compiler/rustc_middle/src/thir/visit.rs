@@ -150,6 +150,7 @@ pub fn walk_expr<'thir, 'tcx: 'thir, V: Visitor<'thir, 'tcx>>(
                 use InlineAsmOperand::*;
                 match op {
                     In { expr, reg: _ }
+                    | Condition { expr: Some(expr), cond: _ }
                     | Out { expr: Some(expr), reg: _, late: _ }
                     | InOut { expr, reg: _, late: _ } => visitor.visit_expr(&visitor.thir()[*expr]),
                     SplitInOut { in_expr, out_expr, reg: _, late: _ } => {
@@ -158,7 +159,8 @@ pub fn walk_expr<'thir, 'tcx: 'thir, V: Visitor<'thir, 'tcx>>(
                             visitor.visit_expr(&visitor.thir()[*out_expr]);
                         }
                     }
-                    Out { expr: None, reg: _, late: _ }
+                    Condition { expr: None, cond: _ }
+                    | Out { expr: None, reg: _, late: _ }
                     | Const { value: _, span: _ }
                     | SymFn { value: _, span: _ }
                     | SymStatic { def_id: _ } => {}

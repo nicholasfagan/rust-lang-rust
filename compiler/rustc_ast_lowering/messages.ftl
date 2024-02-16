@@ -94,11 +94,17 @@ ast_lowering_invalid_asm_template_modifier_reg_class =
 ast_lowering_invalid_asm_template_modifier_sym =
     asm template modifiers are not allowed for `sym` arguments
 
+ast_lowering_invalid_asm_template_modifier_condition =
+    asm template modifiers are not allowed for `flagout` arguments
+
 ast_lowering_invalid_register =
     invalid register `{$reg}`: {$error}
 
 ast_lowering_invalid_register_class =
     invalid register class `{$reg_class}`: {$error}
+
+ast_lowering_invalid_condition =
+    invalid flag output condition `{$cond}`: {$error}
 
 ast_lowering_match_arm_with_no_body =
     `match` arm with no body

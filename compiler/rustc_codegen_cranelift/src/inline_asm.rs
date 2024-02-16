@@ -31,6 +31,10 @@ pub(crate) enum CInlineAsmOperand<'tcx> {
     Symbol {
         symbol: String,
     },
+    Condition {
+        cond: InlineAsmCondition,
+        place: Option<CPlace<'tcx>>,
+    },
 }
 
 pub(crate) fn codegen_inline_asm_terminator<'tcx>(
@@ -129,6 +133,10 @@ pub(crate) fn codegen_inline_asm_terminator<'tcx>(
                 let instance = Instance::mono(fx.tcx, def_id).polymorphize(fx.tcx);
                 CInlineAsmOperand::Symbol { symbol: fx.tcx.symbol_name(instance).name.to_owned() }
             }
+            InlineAsmOperand::Condition { cond, ref place } => CInlineAsmOperand::Condition {
+                cond,
+                place: place.map(|place| crate::base::codegen_place(fx, place)),
+            },
         })
         .collect::<Vec<_>>();
 
@@ -187,7 +195,8 @@ pub(crate) fn codegen_inline_asm_inner<'tcx>(
             CInlineAsmOperand::In { reg: _, value } => {
                 inputs.push((asm_gen.stack_slots_input[i].unwrap(), *value));
             }
-            CInlineAsmOperand::Out { reg: _, late: _, place } => {
+            CInlineAsmOperand::Condition { cond: _, place }
+            | CInlineAsmOperand::Out { reg: _, late: _, place } => {
                 if let Some(place) = place {
                     outputs.push((asm_gen.stack_slots_output[i].unwrap(), *place));
                 }
@@ -335,6 +344,11 @@ impl<'tcx> InlineAssemblyGenerator<'_, 'tcx> {
                     let reg = alloc_reg.expect("cannot allocate registers");
                     regs[i] = Some(reg);
                     allocated.entry(reg).or_default().1 = true;
+                }
+                CInlineAsmOperand::Condition { cond: _, place: _ } => {
+                    // FIXME(inline-asm-condition): We should also allocate a register for the condition code
+                    // here.
+                    todo!()
                 }
                 _ => (),
             }
@@ -539,6 +553,9 @@ impl<'tcx> InlineAssemblyGenerator<'_, 'tcx> {
                             generated_asm.push_str(value);
                         }
                         CInlineAsmOperand::Symbol { ref symbol } => generated_asm.push_str(symbol),
+                        CInlineAsmOperand::Condition { .. } => {
+                            bug!("Condition operand in inline asm template")
+                        }
                     }
                 }
             }
@@ -550,6 +567,16 @@ impl<'tcx> InlineAssemblyGenerator<'_, 'tcx> {
         }
 
         if !self.options.contains(InlineAsmOptions::NORETURN) {
+            for operand in self.operands.iter() {
+                match *operand {
+                    CInlineAsmOperand::Condition { cond, .. } => {
+                        let _ = cond;
+                        // FIXME(inline-asm-condition): We should generate `setcc` or equivalent.
+                    }
+                    _ => (),
+                }
+            }
+
             // Read output registers
             for (reg, slot) in self
                 .registers

@@ -24,7 +24,7 @@ use rustc_ast::Mutability;
 use rustc_span::def_id::LocalDefId;
 use rustc_span::symbol::Symbol;
 use rustc_span::Span;
-use rustc_target::asm::InlineAsmRegOrRegClass;
+use rustc_target::asm::{InlineAsmCondition, InlineAsmRegOrRegClass};
 use smallvec::SmallVec;
 
 /// Represents the "flavors" of MIR.
@@ -917,6 +917,13 @@ pub enum InlineAsmOperand<'tcx> {
     },
     SymStatic {
         def_id: DefId,
+    },
+    Condition {
+        // FIXME(inline-asm-conditions): Why isn't InlineAsmCondition TypeFoldable or TypeVisitable?
+        #[type_foldable(identity)]
+        #[type_visitable(ignore)]
+        cond: InlineAsmCondition,
+        place: Option<Place<'tcx>>,
     },
 }
 
