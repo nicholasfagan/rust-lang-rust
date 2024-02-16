@@ -153,9 +153,41 @@ impl<'a, 'gcc, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'gcc, 'tcx> {
         // 1. Normal variables (and saving operands to buffers).
         for (rust_idx, op) in rust_operands.iter().enumerate() {
             match *op {
-                InlineAsmOperandRef::Condition { .. } => {
-                    // FIXME(inline-asm-condition): implement
-                    todo!()
+                InlineAsmOperandRef::Condition { cond, place } => {
+                    if let Some(place) = place {
+                        // if we have a place for the condition, we can use it as an output
+                        let ty = place.layout.gcc_type(self.cx);
+                        let constraint = cond_to_gcc(cond);
+                        let tmp_var = self.current_func().new_local(None, ty, "cond_tmp");
+
+                        outputs.push(AsmOutOperand {
+                            rust_idx,
+                            constraint,
+                            late: true,
+                            readwrite: false,
+                            tmp_var,
+                            out_place: Some(place)
+                        });
+                    } else {
+                        // FIXME(inline-asm-condition): Not sure if it even makes sense to have a
+                        //                              clobber for a condition. Frontend already
+                        //                              enforces no options(preserve_flags) with flagouts,
+                        //                              so we are adding "cc" to the clobbers further down.
+
+                        // if no place, make a dummy temp variable for the clobber.
+                        let ty = self.cx.type_i1();
+                        let constraint = cond_to_gcc(cond);
+                        let tmp_var = self.current_func().new_local(None, ty, "cond_tmp");
+
+                        outputs.push(AsmOutOperand {
+                            rust_idx,
+                            constraint,
+                            late: true,
+                            readwrite: false,
+                            tmp_var,
+                            out_place: None,
+                        });
+                    }
                 },
 
                 InlineAsmOperandRef::Out { reg, late, place } => {
@@ -281,8 +313,7 @@ impl<'a, 'gcc, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'gcc, 'tcx> {
         for (rust_idx, op) in rust_operands.iter().enumerate() {
             match *op {
                 InlineAsmOperandRef::Condition { .. } => {
-                    // FIXME(inline-asm-condition): implement
-                    todo!()
+                    // processed in the previous pass
                 },
                 // `out("explicit register") var`
                 InlineAsmOperandRef::Out { reg, late, place } => {
@@ -552,6 +583,45 @@ fn estimate_template_length(template: &[InlineAsmTemplatePiece], constants_len: 
         res += INTEL_SYNTAX_INS.len() + ATT_SYNTAX_INS.len();
     }
     res
+}
+
+/// Converts a condition code to a GCC constraint code.
+fn cond_to_gcc(cond: InlineAsmCondition) -> &'static str {
+    match cond {
+        InlineAsmCondition::X86(x86) => match x86 {
+            X86InlineAsmCondition::a => "@cca",
+            X86InlineAsmCondition::ae => "@ccae",
+            X86InlineAsmCondition::b => "@ccb",
+            X86InlineAsmCondition::be => "@ccbe",
+            X86InlineAsmCondition::c => "@ccb",
+            X86InlineAsmCondition::e => "@cce",
+            X86InlineAsmCondition::z => "@cce",
+            X86InlineAsmCondition::g => "@ccg",
+            X86InlineAsmCondition::ge => "@ccge",
+            X86InlineAsmCondition::l => "@ccl",
+            X86InlineAsmCondition::le => "@ccle",
+            X86InlineAsmCondition::na => "@ccbe",
+            X86InlineAsmCondition::nae => "@ccb",
+            X86InlineAsmCondition::nb => "@ccae",
+            X86InlineAsmCondition::nbe => "@cca",
+            X86InlineAsmCondition::nc => "@ccae",
+            X86InlineAsmCondition::ne => "@ccne",
+            X86InlineAsmCondition::nz => "@ccne",
+            X86InlineAsmCondition::ng => "@ccle",
+            X86InlineAsmCondition::nge => "@ccl",
+            X86InlineAsmCondition::nl => "@ccge",
+            X86InlineAsmCondition::nle => "@ccg",
+            X86InlineAsmCondition::no => "@ccno",
+            X86InlineAsmCondition::np => "@ccnp",
+            X86InlineAsmCondition::ns => "@ccns",
+            X86InlineAsmCondition::o => "@cco",
+            X86InlineAsmCondition::p => "@ccp",
+            X86InlineAsmCondition::s => "@ccs",
+        },
+        InlineAsmCondition::Err => bug!("unsupported condition code"),
+        // FIXME(inline-asm-condition): support other architectures.
+        _ => unimplemented!(),
+    }
 }
 
 /// Converts a register class to a GCC constraint code.

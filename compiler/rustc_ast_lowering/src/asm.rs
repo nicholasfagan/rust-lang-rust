@@ -249,7 +249,7 @@ impl<'a, 'hir> LoweringContext<'a, 'hir> {
 
                         if !self.tcx.features().asm_flagout {
                             feature_err(
-                                &sess.parse_sess,
+                                &sess,
                                 sym::asm_flagout,
                                 *op_sp,
                                 "flagout operands for inline assembly are unstable",
