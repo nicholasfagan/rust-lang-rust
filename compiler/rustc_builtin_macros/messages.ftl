@@ -5,6 +5,8 @@ builtin_macros_asm_clobber_abi = clobber_abi
 builtin_macros_asm_clobber_no_reg = asm with `clobber_abi` must specify explicit registers for outputs
 builtin_macros_asm_clobber_outputs = generic outputs
 
+builtin_macros_asm_condition_name = flagout arguments cannot have names
+
 builtin_macros_asm_duplicate_arg = duplicate argument named `{$name}`
     .label = previously here
     .arg = duplicate argument
@@ -40,11 +42,11 @@ builtin_macros_asm_pos_after_flagout = positional arguments cannot follow named 
     .explicit = explicit register argument
     .flagout = flagout argument
 
+builtin_macros_asm_preserves_flags_with_condition = asm with a `flagout` operand must not contain the `preserves_flags` option
+
 builtin_macros_asm_pure_combine = the `pure` option must be combined with either `nomem` or `readonly`
 
 builtin_macros_asm_pure_no_output = asm with the `pure` option must have at least one output
-
-builtin_macros_asm_preserves_flags_with_condition = asm with a `flagout` operand must not contain the `preserves_flags` option
 
 builtin_macros_asm_requires_template = requires at least a template string argument
 
@@ -122,14 +124,12 @@ builtin_macros_env_not_defined = environment variable `{$var}` not defined at co
 
 builtin_macros_env_takes_args = `env!()` takes 1 or 2 arguments
 
-builtin_macros_expected_one_cfg_pattern = expected 1 cfg-pattern
-
-builtin_macros_expected_register_class_or_explicit_register = expected register class or explicit register
-
 builtin_macros_expected_condition = expected condition
     .note = name a condition of the flags register, like `"c"` (carry) or `"nz"` (not zero)
 
-builtin_macros_asm_condition_name = flagout arguments cannot have names
+builtin_macros_expected_one_cfg_pattern = expected 1 cfg-pattern
+
+builtin_macros_expected_register_class_or_explicit_register = expected register class or explicit register
 
 builtin_macros_export_macro_rules = cannot export macro_rules! macros from a `proc-macro` crate type currently
 
