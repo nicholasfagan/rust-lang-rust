@@ -1266,7 +1266,7 @@ impl<'a> State<'a> {
                     s.print_qpath(path, true);
                 }
                 hir::InlineAsmOperand::Condition { cond, ref expr } => {
-                    s.word("flagout");
+                    s.word("flag_out");
                     s.popen();
                     s.word(format!("{cond}"));
                     s.pclose();

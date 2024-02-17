@@ -171,7 +171,7 @@ impl<'a, 'gcc, 'tcx> AsmBuilderMethods<'tcx> for Builder<'a, 'gcc, 'tcx> {
                     } else {
                         // FIXME(inline-asm-condition): Not sure if it even makes sense to have a
                         //                              clobber for a condition. Frontend already
-                        //                              enforces no options(preserve_flags) with flagouts,
+                        //                              enforces no options(preserve_flags) with flag_outs,
                         //                              so we are adding "cc" to the clobbers further down.
 
                         // if no place, make a dummy temp variable for the clobber.

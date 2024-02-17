@@ -237,22 +237,15 @@ impl<'a, 'hir> LoweringContext<'a, 'hir> {
                         }
                     }
                     InlineAsmOperand::Condition { cond, expr } => {
-                        //self.dcx().emit_err(InlineAsmUnsupportedTarget { span: sp });
-                        //self.dcx().emit_err(InvalidInlineAsmOperand {Err,Reg(asm::InlineAsmReg::Err),
-                        //vbj c
-                        //op_span: *op_sp,
-                        //msg: "invalid flag operand".to_string(),
-                        //});
-
                         // The registers are parsed here, during HIR lowering,
                         // so parse condition codes here too.
 
-                        if !self.tcx.features().asm_flagout {
+                        if !self.tcx.features().asm_flag_out {
                             feature_err(
                                 &sess,
-                                sym::asm_flagout,
+                                sym::asm_flag_out,
                                 *op_sp,
-                                "flagout operands for inline assembly are unstable",
+                                "flag_out operands for inline assembly are unstable",
                             )
                             .emit();
                         }

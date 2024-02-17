@@ -2186,9 +2186,9 @@ pub enum InlineAsmRegOrRegClass {
     RegClass(Symbol),
 }
 
-/// Inline assembly operand explicit flagout flag.
+/// Inline assembly operand explicit flag_out flag.
 ///
-/// E.g., "c" in `asm!("add {a}, {b}", a = inout(reg) a, b = in(reg) b, c = flagout(carry))`.
+/// E.g., "c" in `asm!("add {a}, {b}", a = inout(reg) a, b = in(reg) b, c = flag_out(carry))`.
 ///
 /// These match up with the conditions in the `llvm` and `gcc` backends,
 /// which for x86 accept the following:

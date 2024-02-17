@@ -6,8 +6,8 @@ pub fn main() {
                 "addl {rhs:e}, {lhs:e}",
                 lhs = inlateout(reg) a,
                 rhs = in(reg) b,
-                flagout("c") carry,
-                //~^ ERROR 9:17: 9:35: flagout operands for inline assembly are unstable [E0658]
+                flag_out("c") carry,
+                //~^ ERROR 9:17: 9:36: flag_out operands for inline assembly are unstable [E0658]
                 options(att_syntax, nostack, nomem, pure)
             );
         }

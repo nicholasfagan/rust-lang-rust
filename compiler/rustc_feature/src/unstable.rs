@@ -346,7 +346,7 @@ declare_features! (
     /// Enables experimental inline assembly support for additional architectures.
     (unstable, asm_experimental_arch, "1.58.0", Some(93335)),
     /// Enables experimental inline assembly flag output
-    (unstable, asm_flagout, "CURRENT_RUSTC_VERSION", None),
+    (unstable, asm_flag_out, "CURRENT_RUSTC_VERSION", None),
     /// Allows the `may_unwind` option in inline assembly.
     (unstable, asm_unwind, "1.58.0", Some(93334)),
     /// Allows users to enforce equality of associated constants `TraitImpl<AssocConst=3>`.

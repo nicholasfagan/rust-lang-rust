@@ -169,10 +169,10 @@ pub fn parse_asm_args<'a>(
                 path: path.clone(),
             };
             ast::InlineAsmOperand::Sym { sym }
-        } else if p.token.is_keyword(sym::flagout) {
+        } else if p.token.is_keyword(sym::flag_out) {
             p.bump();
 
-            // FIXME(inline-asm-condition): currently don't show flagout in the diagnostics,
+            // FIXME(inline-asm-condition): currently don't show flag_out in the diagnostics,
             // but should add to list of expected tokens if feature is enabled.
             let cond = parse_condition(p)?;
             is_condition = true;
@@ -237,16 +237,16 @@ pub fn parse_asm_args<'a>(
             {
                 let named = args.named_args.values().map(|p| args.operands[*p].1).collect();
                 let explicit = args.reg_args.iter().map(|p| args.operands[p].1).collect();
-                let flagout = args.cond_args.iter().map(|p| args.operands[p].1).collect();
+                let flag_out = args.cond_args.iter().map(|p| args.operands[p].1).collect();
 
                 if args.cond_args.is_empty() {
                     dcx.emit_err(errors::AsmPositionalAfter { span, named, explicit });
                 } else {
-                    dcx.emit_err(errors::AsmPositionalAfterFlagout {
+                    dcx.emit_err(errors::AsmPositionalAfterFlagOut {
                         span,
                         named,
                         explicit,
-                        flagout,
+                        flag_out,
                     });
                 }
             }
@@ -676,10 +676,10 @@ fn expand_preparsed_asm(ecx: &mut ExtCtxt<'_>, args: AsmArgs) -> Option<ast::Inl
                                         "use the register name directly in the assembly code",
                                     );
                                 } else if args.cond_args.contains(idx) {
-                                    err.span_label(args.operands[idx].1, "flagout argument");
+                                    err.span_label(args.operands[idx].1, "flag_out argument");
                                     err.span_note(
                                         args.operands[idx].1,
-                                        "flagout arguments cannot be used in the asm template",
+                                        "flag_out arguments cannot be used in the asm template",
                                     );
                                 }
                                 err.emit();

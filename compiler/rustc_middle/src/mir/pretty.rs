@@ -832,9 +832,9 @@ impl<'tcx> TerminatorKind<'tcx> {
                         }
                         InlineAsmOperand::Condition { cond, place } => {
                             if let Some(place) = place {
-                                write!(fmt, "flagout({cond:?}) {place:?}")?;
+                                write!(fmt, "flag_out({cond:?}) {place:?}")?;
                             } else {
-                                write!(fmt, "flagout({cond:?}) _")?;
+                                write!(fmt, "flag_out({cond:?}) _")?;
                             }
                         }
                     }

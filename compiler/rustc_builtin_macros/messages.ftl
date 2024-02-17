@@ -5,7 +5,7 @@ builtin_macros_asm_clobber_abi = clobber_abi
 builtin_macros_asm_clobber_no_reg = asm with `clobber_abi` must specify explicit registers for outputs
 builtin_macros_asm_clobber_outputs = generic outputs
 
-builtin_macros_asm_condition_name = flagout arguments cannot have names
+builtin_macros_asm_condition_name = flag_out arguments cannot have names
 
 builtin_macros_asm_duplicate_arg = duplicate argument named `{$name}`
     .label = previously here
@@ -36,13 +36,13 @@ builtin_macros_asm_pos_after = positional arguments cannot follow named argument
     .named = named argument
     .explicit = explicit register argument
 
-builtin_macros_asm_pos_after_flagout = positional arguments cannot follow named arguments, explicit register arguments, or flagout arguments
+builtin_macros_asm_pos_after_flag_out = positional arguments cannot follow named arguments, explicit register arguments, or flag_out arguments
     .pos = positional argument
     .named = named argument
     .explicit = explicit register argument
-    .flagout = flagout argument
+    .flag_out = flag_out argument
 
-builtin_macros_asm_preserves_flags_with_condition = asm with a `flagout` operand must not contain the `preserves_flags` option
+builtin_macros_asm_preserves_flags_with_condition = asm with a `flag_out` operand must not contain the `preserves_flags` option
 
 builtin_macros_asm_pure_combine = the `pure` option must be combined with either `nomem` or `readonly`
 

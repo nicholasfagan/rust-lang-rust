@@ -784,8 +784,8 @@ pub(crate) struct AsmPositionalAfter {
 }
 
 #[derive(Diagnostic)]
-#[diag(builtin_macros_asm_pos_after_flagout)]
-pub(crate) struct AsmPositionalAfterFlagout {
+#[diag(builtin_macros_asm_pos_after_flag_out)]
+pub(crate) struct AsmPositionalAfterFlagOut {
     #[primary_span]
     #[label(builtin_macros_pos)]
     pub(crate) span: Span,
@@ -793,8 +793,8 @@ pub(crate) struct AsmPositionalAfterFlagout {
     pub(crate) named: Vec<Span>,
     #[label(builtin_macros_explicit)]
     pub(crate) explicit: Vec<Span>,
-    #[label(builtin_macros_flagout)]
-    pub(crate) flagout: Vec<Span>,
+    #[label(builtin_macros_flag_out)]
+    pub(crate) flag_out: Vec<Span>,
 }
 
 #[derive(Diagnostic)]

@@ -1332,7 +1332,7 @@ impl<'a> State<'a> {
                         }
                     }
                     InlineAsmOperand::Condition { cond, expr } => {
-                        s.word("flagout");
+                        s.word("flag_out");
                         s.popen();
                         s.print_symbol(cond.name, ast::StrStyle::Cooked);
                         s.pclose();

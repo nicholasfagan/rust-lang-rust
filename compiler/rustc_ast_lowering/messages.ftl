@@ -86,7 +86,7 @@ ast_lowering_invalid_abi_clobber_abi =
 ast_lowering_invalid_abi_suggestion = did you mean
 
 ast_lowering_invalid_asm_template_modifier_condition =
-    asm template modifiers are not allowed for `flagout` arguments
+    asm template modifiers are not allowed for `flag_out` arguments
 
 ast_lowering_invalid_asm_template_modifier_const =
     asm template modifiers are not allowed for `const` arguments

@@ -477,7 +477,7 @@ impl<'a, 'tcx> InlineAsmCtxt<'a, 'tcx> {
                         if !matches!(ty.kind(), ty::Bool) {
                             self.tcx
                                 .dcx()
-                                .struct_span_err(expr.span, "invalid `flagout` operand")
+                                .struct_span_err(expr.span, "invalid `flag_out` operand")
                                 .with_span_label(
                                     expr.span,
                                     format!("expected `bool`, found `{}`", ty),
