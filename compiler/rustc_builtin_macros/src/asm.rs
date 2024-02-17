@@ -169,7 +169,11 @@ pub fn parse_asm_args<'a>(
                 path: path.clone(),
             };
             ast::InlineAsmOperand::Sym { sym }
-        } else if p.eat_keyword(sym::flagout) {
+        } else if p.token.is_keyword(sym::flagout) {
+            p.bump();
+
+            // FIXME(inline-asm-condition): currently don't show flagout in the diagnostics,
+            // but should add to list of expected tokens if feature is enabled.
             let cond = parse_condition(p)?;
             is_condition = true;
             let expr = if p.eat_keyword(kw::Underscore) { None } else { Some(p.parse_expr()?) };
