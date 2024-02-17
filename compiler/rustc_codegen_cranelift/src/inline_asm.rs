@@ -345,11 +345,6 @@ impl<'tcx> InlineAssemblyGenerator<'_, 'tcx> {
                     regs[i] = Some(reg);
                     allocated.entry(reg).or_default().1 = true;
                 }
-                CInlineAsmOperand::Condition { cond: _, place: _ } => {
-                    // FIXME(inline-asm-condition): We should also allocate a register for the condition code
-                    // here.
-                    todo!()
-                }
                 _ => (),
             }
         }
@@ -435,6 +430,23 @@ impl<'tcx> InlineAssemblyGenerator<'_, 'tcx> {
             match *operand {
                 CInlineAsmOperand::Out { reg, place: Some(_), .. } => {
                     slots_output[i] = Some(new_slot(reg.reg_class()));
+                }
+                _ => (),
+            }
+        }
+
+        // allocate single-byte slots for condition codes
+        let mut new_slot = || {
+            let offset = slot_size;
+            slot_size += Size::from_bytes(1);
+            offset
+        };
+
+        for (i, operand) in self.operands.iter().enumerate() {
+            match *operand {
+                CInlineAsmOperand::Condition { place: Some(_), .. } => {
+                    // only need a byte for the condition code
+                    slots_output[i] = Some(new_slot());
                 }
                 _ => (),
             }
@@ -567,11 +579,19 @@ impl<'tcx> InlineAssemblyGenerator<'_, 'tcx> {
         }
 
         if !self.options.contains(InlineAsmOptions::NORETURN) {
-            for operand in self.operands.iter() {
+            for (operand, slot) in self.operands.iter().zip(self.stack_slots_output.iter().copied())
+            {
                 match *operand {
                     CInlineAsmOperand::Condition { cond, .. } => {
-                        let _ = cond;
-                        // FIXME(inline-asm-condition): We should generate `setcc` or equivalent.
+                        if let Some(slot) = slot {
+                            writeln!(
+                                &mut generated_asm,
+                                "    set{} [rbx+0x{:x}] ",
+                                cond.name(),
+                                slot.bytes()
+                            )
+                            .unwrap();
+                        }
                     }
                     _ => (),
                 }

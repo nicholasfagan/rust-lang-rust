@@ -618,7 +618,6 @@ fn cond_to_gcc(cond: InlineAsmCondition) -> &'static str {
             X86InlineAsmCondition::p => "@ccp",
             X86InlineAsmCondition::s => "@ccs",
         },
-        InlineAsmCondition::Err => bug!("unsupported condition code"),
         // FIXME(inline-asm-condition): support other architectures.
         _ => unimplemented!(),
     }
